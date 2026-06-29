@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { Card } from "@/components/Card";
 import { PrimaryButton } from "@/components/PrimaryButton";
 
@@ -12,6 +12,8 @@ type GeneralSettings = {
   googleSheetsId: string;
   googleSheetsRange: string;
 };
+
+const STORAGE_KEY = "app-settings";
 
 const EMPTY: GeneralSettings = {
   n8nWebhookUrl: "",
@@ -31,32 +33,27 @@ export default function SettingsPage() {
   );
 
   useEffect(() => {
-    fetch("/api/settings")
-      .then((res) => res.json())
-      .then((data) => setSettings(data))
-      .finally(() => setLoading(false));
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        setSettings({ ...EMPTY, ...parsed });
+      } catch {
+        setSettings(EMPTY);
+      }
+    }
+    setLoading(false);
   }, []);
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setSaving(true);
     setMessage(null);
 
-    const res = await fetch("/api/settings", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(settings),
-    });
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
 
     setSaving(false);
-
-    if (res.ok) {
-      const data = await res.json();
-      setSettings(data);
-      setMessage({ type: "success", text: "Ayarlar kaydedildi." });
-    } else {
-      setMessage({ type: "error", text: "Kaydedilemedi, lütfen tekrar deneyin." });
-    }
+    setMessage({ type: "success", text: "Ayarlar kaydedildi." });
   }
 
   if (loading) {

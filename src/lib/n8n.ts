@@ -1,5 +1,3 @@
-import { getSettings } from "./settings";
-
 export type TriggerSearchPayload = {
   keyword?: string;
   keywords?: string[];
@@ -9,13 +7,12 @@ export type TriggerSearchPayload = {
   start?: number;
 };
 
-export async function triggerSearch(payload: TriggerSearchPayload): Promise<void> {
-  const settings = await getSettings();
-  if (!settings.n8nWebhookUrl) {
-    throw new Error("n8n webhook URL ayarlanmamış. Ayarlar sayfasından ekleyin.");
+export async function triggerSearch(webhookUrl: string, payload: TriggerSearchPayload): Promise<void> {
+  if (!webhookUrl) {
+    throw new Error("n8n webhook URL ayarlanmamış.");
   }
 
-  const res = await fetch(settings.n8nWebhookUrl, {
+  const res = await fetch(webhookUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),

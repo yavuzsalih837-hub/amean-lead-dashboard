@@ -3,6 +3,11 @@ import { triggerSearch } from "@/lib/n8n";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
+  const webhookUrl = typeof body.webhookUrl === "string" ? body.webhookUrl.trim() : "";
+
+  if (!webhookUrl) {
+    return NextResponse.json({ error: "webhookUrl eksik." }, { status: 400 });
+  }
 
   const payload = {
     keyword: body.keyword,
@@ -14,7 +19,7 @@ export async function POST(request: NextRequest) {
   };
 
   try {
-    await triggerSearch(payload);
+    await triggerSearch(webhookUrl, payload);
     return NextResponse.json({ ok: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Arama tetiklenemedi.";

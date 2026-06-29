@@ -1,25 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSettings, updateSearchSettings } from "@/lib/settings";
 
 export async function GET() {
-  const settings = await getSettings();
-  return NextResponse.json(settings.search);
+  return NextResponse.json({ error: "Not available" }, { status: 404 });
 }
 
-export async function PUT(request: NextRequest) {
-  const body = await request.json().catch(() => null);
-  if (!body) {
-    return NextResponse.json({ error: "Geçersiz istek gövdesi." }, { status: 400 });
-  }
-
-  const updated = await updateSearchSettings({
-    keyword: body.keyword,
-    keywords: body.keywords,
-    location: body.location,
-    industry: body.industry,
-    resultLimit: body.resultLimit,
-    start: body.start,
-  });
-
-  return NextResponse.json(updated.search);
+export async function PUT() {
+  return NextResponse.json({ error: "Not available" }, { status: 404 });
 }

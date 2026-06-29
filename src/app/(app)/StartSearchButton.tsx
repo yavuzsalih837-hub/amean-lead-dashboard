@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { PrimaryButton } from "@/components/PrimaryButton";
 
-const STORAGE_KEY = "search-settings";
+const SEARCH_SETTINGS_KEY = "search-settings";
+const APP_SETTINGS_KEY = "app-settings";
 
 type StoredSearchSettings = {
   keyword?: string;
@@ -16,6 +17,15 @@ type StoredSearchSettings = {
   start?: number;
 };
 
+type StoredAppSettings = {
+  n8nWebhookUrl?: string;
+  n8nApiUrl?: string;
+  n8nApiKey?: string;
+  n8nWorkflowId?: string;
+  googleSheetsId?: string;
+  googleSheetsRange?: string;
+};
+
 export function StartSearchButton() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -23,23 +33,25 @@ export function StartSearchButton() {
     null
   );
 
-  function getStoredSettings(): StoredSearchSettings {
+  function getStoredSettings<T>(key: string): T | null {
     try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return {};
-      return JSON.parse(raw) as StoredSearchSettings;
+      const raw = window.localStorage.getItem(key);
+      if (!raw) return null;
+      return JSON.parse(raw) as T;
     } catch {
-      return {};
+      return null;
     }
   }
 
   function saveStoredStart(start: number) {
     try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      const parsed = raw ? JSON.parse(raw) : {};
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...parsed, start }));
+      const settings = getStoredSettings<StoredSearchSettings>(SEARCH_SETTINGS_KEY) || {};
+      window.localStorage.setItem(
+        SEARCH_SETTINGS_KEY,
+        JSON.stringify({ ...settings, start })
+      );
     } catch {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ start }));
+      window.localStorage.setItem(SEARCH_SETTINGS_KEY, JSON.stringify({ start }));
     }
   }
 
@@ -47,13 +59,28 @@ export function StartSearchButton() {
     setLoading(true);
     setMessage(null);
 
-    const settings = getStoredSettings();
-    const nextStart = typeof settings.start === "number" && settings.start >= 1 ? settings.start : 1;
-    const payload: StoredSearchSettings = {
-      ...settings,
+    const searchSettings = getStoredSettings<StoredSearchSettings>(SEARCH_SETTINGS_KEY) || {};
+    const appSettings = getStoredSettings<StoredAppSettings>(APP_SETTINGS_KEY) || {};
+
+    const webhookUrl = appSettings.n8nWebhookUrl?.trim();
+    if (!webhookUrl) {
+      setLoading(false);
+      setMessage({ type: "error", text: "n8n webhook URL ayarlanmamış." });
+      return;
+    }
+
+    const nextStart = typeof searchSettings.start === "number" && searchSettings.start >= 1 ? searchSettings.start : 1;
+    const keywords = Array.isArray(searchSettings.keywords)
+      ? searchSettings.keywords
+      : [];
+    const payload = {
+      webhookUrl,
+      keyword: typeof searchSettings.keyword === "string" ? searchSettings.keyword : "",
+      keywords: keywords.length > 0 ? keywords : searchSettings.keyword ? [searchSettings.keyword] : [],
+      location: searchSettings.location,
+      industry: searchSettings.industry,
+      resultLimit: searchSettings.resultLimit,
       start: nextStart,
-      keywords: settings.keywords ?? [],
-      keyword: settings.keyword ?? "",
     };
 
     const res = await fetch("/api/search", {
