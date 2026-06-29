@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/session";
 
 export async function POST() {
-  const session = await getSession();
+  const response = NextResponse.json({ ok: true });
 
-  session.isLoggedIn = false;
-  session.email = undefined;
-  await session.save();
+  response.cookies.delete("session");
 
-  return NextResponse.json({ ok: true });
+  return response;
 }
