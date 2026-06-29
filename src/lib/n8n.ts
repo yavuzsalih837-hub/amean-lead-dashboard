@@ -42,19 +42,17 @@ type RawExecution = {
 };
 
 export async function fetchWorkflowLogs(limit = 20): Promise<WorkflowLog[]> {
-  const settings = await getSettings();
-  if (!settings.n8nApiUrl || !settings.n8nApiKey) {
+  const apiUrl = process.env.N8N_API_URL?.trim();
+  const apiKey = process.env.N8N_API_KEY?.trim();
+  if (!apiUrl || !apiKey) {
     return [];
   }
 
-  const url = new URL(`${settings.n8nApiUrl.replace(/\/$/, "")}/executions`);
+  const url = new URL(`${apiUrl.replace(/\/$/, "")}/executions`);
   url.searchParams.set("limit", String(limit));
-  if (settings.n8nWorkflowId) {
-    url.searchParams.set("workflowId", settings.n8nWorkflowId);
-  }
 
   const res = await fetch(url.toString(), {
-    headers: { "X-N8N-API-KEY": settings.n8nApiKey },
+    headers: { "X-N8N-API-KEY": apiKey },
     cache: "no-store",
   });
 
