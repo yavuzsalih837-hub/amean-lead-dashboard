@@ -35,34 +35,19 @@ export default function SearchSettingsPage() {
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     const parsedStored = stored ? JSON.parse(stored) : null;
-
-    fetch("/api/search-settings")
-      .then((res) => res.json())
-      .then((data) => setSettings({ ...EMPTY, ...data, ...parsedStored }))
-      .finally(() => setLoading(false));
+    setSettings({ ...EMPTY, ...parsedStored });
+    setLoading(false);
   }, []);
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     setMessage(null);
 
-    const res = await fetch("/api/search-settings", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(settings),
-    });
-
-    if (res.ok) {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-    }
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
 
     setSaving(false);
-    setMessage(
-      res.ok
-        ? { type: "success", text: "Arama ayarları kaydedildi." }
-        : { type: "error", text: "Kaydedilemedi, lütfen tekrar deneyin." }
-    );
+    setMessage({ type: "success", text: "Arama ayarları kaydedildi." });
   }
 
   function handleResetStart() {
@@ -86,15 +71,12 @@ export default function SearchSettingsPage() {
   }
 
   function handleRemoveKeyword(index: number) {
-    const next = {
-      ...settings,
-      keywords: settings.keywords.filter((_, i) => i !== index),
-    };
+    const next = { ...settings, keywords: settings.keywords.filter((_, i) => i !== index) };
     setSettings(next);
     setMessage({ type: "success", text: "Anahtar kelime silindi." });
   }
 
-  function handleKeywordInputKeyDown(e: React.KeyboardEvent) {
+  function handleKeywordInputKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
       e.preventDefault();
       handleAddKeyword();

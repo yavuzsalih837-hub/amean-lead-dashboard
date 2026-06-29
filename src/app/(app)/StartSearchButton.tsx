@@ -7,6 +7,15 @@ import { PrimaryButton } from "@/components/PrimaryButton";
 
 const STORAGE_KEY = "search-settings";
 
+type StoredSearchSettings = {
+  keyword?: string;
+  keywords?: string[];
+  location?: string;
+  industry?: string;
+  resultLimit?: number;
+  start?: number;
+};
+
 export function StartSearchButton() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -14,14 +23,13 @@ export function StartSearchButton() {
     null
   );
 
-  function getStoredStart() {
+  function getStoredSettings(): StoredSearchSettings {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return 1;
-      const parsed = JSON.parse(raw);
-      return typeof parsed?.start === "number" && parsed.start >= 1 ? parsed.start : 1;
+      if (!raw) return {};
+      return JSON.parse(raw) as StoredSearchSettings;
     } catch {
-      return 1;
+      return {};
     }
   }
 
@@ -29,10 +37,7 @@ export function StartSearchButton() {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       const parsed = raw ? JSON.parse(raw) : {};
-      window.localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ ...parsed, start })
-      );
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...parsed, start }));
     } catch {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ start }));
     }
@@ -42,11 +47,19 @@ export function StartSearchButton() {
     setLoading(true);
     setMessage(null);
 
-    const currentStart = getStoredStart();
+    const settings = getStoredSettings();
+    const nextStart = typeof settings.start === "number" && settings.start >= 1 ? settings.start : 1;
+    const payload: StoredSearchSettings = {
+      ...settings,
+      start: nextStart,
+      keywords: settings.keywords ?? [],
+      keyword: settings.keyword ?? "",
+    };
+
     const res = await fetch("/api/search", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ start: currentStart }),
+      body: JSON.stringify(payload),
     });
 
     setLoading(false);
@@ -57,7 +70,7 @@ export function StartSearchButton() {
       return;
     }
 
-    saveStoredStart(currentStart + 20);
+    saveStoredStart(nextStart + 20);
     setMessage({
       type: "success",
       text: "Arama başlatıldı. Sonuçlar Lead Listesi'ne düşecek.",

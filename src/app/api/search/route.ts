@@ -1,21 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { triggerSearch } from "@/lib/n8n";
-import { getSettings } from "@/lib/settings";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}));
-  const settings = await getSettings();
-
-  const keywords = body.keywords ?? settings.search.keywords ?? [];
-  const keyword = body.keyword ?? settings.search.keyword ?? "";
 
   const payload = {
-    keyword,
-    keywords: keywords.length > 0 ? keywords : (keyword ? [keyword] : []),
-    location: body.location ?? settings.search.location,
-    industry: body.industry ?? settings.search.industry,
-    resultLimit: body.resultLimit ?? settings.search.resultLimit,
-    start: body.start ?? settings.search.start,
+    keyword: body.keyword,
+    keywords: body.keywords,
+    location: body.location,
+    industry: body.industry,
+    resultLimit: body.resultLimit,
+    start: body.start,
   };
 
   try {
