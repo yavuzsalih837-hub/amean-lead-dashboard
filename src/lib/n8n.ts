@@ -2,9 +2,11 @@ import { getSettings } from "./settings";
 
 export type TriggerSearchPayload = {
   keyword?: string;
+  keywords?: string[];
   location?: string;
   industry?: string;
   resultLimit?: number;
+  start?: number;
 };
 
 export async function triggerSearch(payload: TriggerSearchPayload): Promise<void> {

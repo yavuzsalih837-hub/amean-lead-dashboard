@@ -14,9 +14,11 @@ export async function PUT(request: NextRequest) {
 
   const updated = await updateSearchSettings({
     keyword: body.keyword,
+    keywords: body.keywords,
     location: body.location,
     industry: body.industry,
     resultLimit: body.resultLimit,
+    start: body.start,
   });
 
   return NextResponse.json(updated.search);

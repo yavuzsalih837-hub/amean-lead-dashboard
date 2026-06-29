@@ -3,9 +3,11 @@ import path from "path";
 
 export type SearchSettings = {
   keyword: string;
+  keywords: string[];
   location: string;
   industry: string;
   resultLimit: number;
+  start: number;
 };
 
 export type AppSettings = {
@@ -27,9 +29,11 @@ const DEFAULT_SETTINGS: AppSettings = {
   googleSheetsRange: "Sayfa1",
   search: {
     keyword: "",
+    keywords: [],
     location: "",
     industry: "",
     resultLimit: 50,
+    start: 1,
   },
 };
 
